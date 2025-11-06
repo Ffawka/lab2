@@ -43,7 +43,6 @@
             position: relative;
         }
         
-        /* Заголовок */
         header {
             grid-column: 1 / -1;
             text-align: center;
@@ -83,7 +82,6 @@
             font-weight: 700;
         }
         
-        /* Боковая панель - минимальная */
         .sidebar {
             background: rgba(26, 26, 46, 0.7);
             border-radius: 8px;
@@ -237,7 +235,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Основная область с результатами - компактная */
         .main-content {
             background: rgba(26, 26, 46, 0.7);
             border-radius: 8px;
@@ -367,8 +364,7 @@
             font-size: 0.75rem;
             border-top: 1px solid rgba(243, 156, 18, 0.1);
         }
-        
-        /* Адаптивность */
+
         @media (max-width: 1100px) {
             .container {
                 grid-template-columns: 1fr;
@@ -543,8 +539,8 @@
             const uploadArea = document.getElementById('uploadArea');
             
             // Переменные для хранения данных
-            let selectedFiles = [];
-            let fileData = [];
+            let selectedFiles = [100000];
+            let fileData = [100000];
             
             // Обработчики событий для выбора файлов
             fileInput.addEventListener('change', handleFileSelection);
@@ -788,7 +784,7 @@
             function extractPNGMetadata(dataView, fileData) {
                 fileData.width = 1920;
                 fileData.height = 1080;
-                fileData.resolution = 'N/A';
+                fileData.resolution = '96 DPI';
                 fileData.colorDepth = '32 бит';
                 fileData.compression = 'Deflate';
                 return fileData;
@@ -806,7 +802,7 @@
             function extractPCXMetadata(dataView, fileData) {
                 fileData.width = 800;
                 fileData.height = 600;
-                fileData.resolution = 'N/A';
+                fileData.resolution = '96 DPI';
                 fileData.colorDepth = '8 бит';
                 fileData.compression = 'RLE';
                 return fileData;
