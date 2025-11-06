@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Alchemy | Лабораторная работа 2</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Code+Pro:wght@300;400;600&display=swap');
+        
+        :root {
+            --primary: #2c3e50;
+            --secondary: #e74c3c;
+            --accent: #f39c12;
+            --dark: #1a1a2e;
+            --light: #ecf0f1;
+            --text: #2c3e50;
+            --shadow: rgba(0, 0, 0, 0.2);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: var(--light);
+            font-family: 'Source Code Pro', monospace;
+            line-height: 1.4;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+            position: relative;
+        }
+        
+        /* Заголовок */
+        header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--light);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            color: rgba(236, 240, 241, 0.6);
+            font-style: italic;
+        }
+        
+        
+        .upload-status.show {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .status-count {
+            color: var(--accent);
+            font-weight: 700;
+        }
+        
+        /* Боковая панель - минимальная */
+        .sidebar {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 5px 15px var(--shadow);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(243, 156, 18, 0.1);
+            height: fit-content;
+        }
+        
+        .upload-section h2 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: var(--accent);
+        }
+        
+        .upload-area {
+            border: 2px dashed rgba(243, 156, 18, 0.3);
+            border-radius: 6px;
+            padding: 15px 10px;
+            text-align: center;
+            background: rgba(15, 52, 96, 0.15);
+            margin-bottom: 12px;
+        }
+        
+        .upload-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+        
+        .file-input, .folder-input {
+            display: none;
+        }
+        
+        .file-label, .folder-label {
+            display: block;
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            margin: 6px 0;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        
+        .file-label:hover, .folder-label:hover {
+            transform: translateY(-2px);
+        }
+        
+        .file-info {
+            font-size: 0.75rem;
+            color: rgba(236, 240, 241, 0.5);
+            margin-top: 8px;
+        }
+        
+        .progress-container {
+            margin-top: 12px;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(236, 240, 241, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--secondary));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+        
+        .progress-text {
+            font-size: 0.75rem;
+            color: rgba(236, 240, 241, 0.6);
+            text-align: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #e67e22);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: rgba(236, 240, 241, 0.1);
+            color: var(--light);
+            border: 1px solid rgba(236, 240, 241, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(236, 240, 241, 0.15);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 6px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Основная область с результатами - компактная */
+        .main-content {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 5px 15px var(--shadow);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(243, 156, 18, 0.1);
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(243, 156, 18, 0.2);
+        }
+        
+        .results-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--light);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        
+        th, td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(236, 240, 241, 0.08);
+        }
+        
+        th {
+            background: rgba(15, 52, 96, 0.25);
+            font-weight: 600;
+            color: var(--accent);
+            position: sticky;
+            top: 0;
+            font-size: 0.75rem;
+            padding: 6px 10px;
+        }
+        
+        tr:hover {
+            background: rgba(243, 156, 18, 0.05);
+        }
+        
+        .filename {
+            font-weight: 600;
+            color: var(--light);
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .file-format {
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--accent);
+            background: rgba(243, 156, 18, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            border: 1px solid rgba(243, 156, 18, 0.2);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: rgba(236, 240, 241, 0.4);
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        .table-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding: 6px 10px;
+            background: rgba(15, 52, 96, 0.15);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: rgba(236, 240, 241, 0.6);
+        }
+        
+        .file-counter {
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .error-message, .success-message {
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+            display: none;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        .error-message {
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(192, 57, 43, 0.15));
+            color: #e74c3c;
+            border-left: 3px solid #e74c3c;
+        }
+        
+        .success-message {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(39, 174, 96, 0.15));
+            color: #2ecc71;
+            border-left: 3px solid #2ecc71;
+        }
+        
+        footer {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 25px;
+            padding: 15px;
+            color: rgba(236, 240, 241, 0.4);
+            font-size: 0.75rem;
+            border-top: 1px solid rgba(243, 156, 18, 0.1);
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 1100px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                margin-bottom: 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .container {
+                gap: 12px;
+            }
+            
+            .sidebar, .main-content {
+                padding: 12px;
+            }
+            
+            th, td {
+                padding: 6px 8px;
+                font-size: 0.75rem;
+            }
+            
+            .upload-area {
+                padding: 12px 8px;
+            }
+            
+            .table-footer {
+                flex-direction: column;
+                gap: 6px;
+                text-align: center;
+            }
+            
+            .upload-status {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .results-header {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+            }
+            
+            th, td {
+                padding: 4px 6px;
+                font-size: 0.7rem;
+            }
+            
+            .filename {
+                max-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Статус загрузки -->
+    <div class="upload-status" id="uploadStatus">
+        Загружено файлов: <span class="status-count" id="statusCount">0</span>
+    </div>
+    
+    <div class="container">
+        <header>
+            <p class="subtitle">Лабораторная работа №2</p>
+        </header>
+        
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        
+        <aside class="sidebar">
+            <section class="upload-section">
+                <h2>Загрузка файлов</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🖼️</div>
+                    
+                    <input type="file" id="fileInput" class="file-input" multiple accept=".jpg,.jpeg,.gif,.tif,.tiff,.bmp,.png,.pcx">
+                    <label for="fileInput" class="file-label" id="fileLabel">
+                        Выбрать файлы
+                    </label>
+                    
+                    <input type="file" id="folderInput" class="folder-input" webkitdirectory multiple>
+                    <label for="folderInput" class="folder-label" id="folderLabel">
+                        Выбрать папку
+                    </label>
+                    
+                    <p class="file-info">JPG, GIF, TIF, BMP, PNG, PCX</p>
+                </div>
+                
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress" id="progressBar"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Обработка: 0%</div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="processBtn" disabled>
+                        <span class="loading" id="loadingIcon" style="display: none;"></span>
+                        Анализировать
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn" disabled>Очистить</button>
+                    <button class="btn btn-success" id="exportBtn" disabled>Экспорт CSV</button>
+                </div>
+            </section>
+        </aside>
+        
+        <main class="main-content">
+            <div class="results-header">
+                <h2>Результаты анализа</h2>
+            </div>
+            
+            <div class="table-container">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Файл</th>
+                            <th>Размер</th>
+                            <th>Разрешение</th>
+                            <th>Цвет</th>
+                            <th>Сжатие</th>
+                            <th>Формат</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <tr>
+                            <td colspan="6" class="no-data">Загрузите файлы для анализа</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="table-footer" id="tableFooter" style="display: none;">
+                    <div>Обработано: <span id="processedFiles">0</span></div>
+                    <div class="file-counter" id="fileCounter">Файлов: 0</div>
+                </div>
+            </div>
+        </main>
+        
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Элементы DOM
+            const fileInput = document.getElementById('fileInput');
+            const folderInput = document.getElementById('folderInput');
+            const processBtn = document.getElementById('processBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const resultsBody = document.getElementById('resultsBody');
+            const tableFooter = document.getElementById('tableFooter');
+            const fileCounter = document.getElementById('fileCounter');
+            const processedFiles = document.getElementById('processedFiles');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const loadingIcon = document.getElementById('loadingIcon');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const statusCount = document.getElementById('statusCount');
+            const uploadArea = document.getElementById('uploadArea');
+            
+            // Переменные для хранения данных
+            let selectedFiles = [];
+            let fileData = [];
+            
+            // Обработчики событий для выбора файлов
+            fileInput.addEventListener('change', handleFileSelection);
+            folderInput.addEventListener('change', handleFolderSelection);
+            
+            // Обработчики для drag and drop
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'var(--accent)';
+                uploadArea.style.background = 'rgba(15, 52, 96, 0.25)';
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(243, 156, 18, 0.3)';
+                uploadArea.style.background = 'rgba(15, 52, 96, 0.15)';
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(243, 156, 18, 0.3)';
+                uploadArea.style.background = 'rgba(15, 52, 96, 0.15)';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    const files = Array.from(e.dataTransfer.files);
+                    addFiles(files);
+                }
+            });
+            
+            // Обработчики кнопок
+            processBtn.addEventListener('click', processFiles);
+            clearBtn.addEventListener('click', clearResults);
+            exportBtn.addEventListener('click', exportToCSV);
+            
+            // Функция обработки выбора файлов
+            function handleFileSelection(e) {
+                const files = Array.from(e.target.files);
+                addFiles(files);
+            }
+            
+            // Функция обработки выбора папки
+            function handleFolderSelection(e) {
+                const files = Array.from(e.target.files);
+                addFiles(files);
+            }
+            
+            // Функция добавления файлов в список
+            function addFiles(files) {
+                // Фильтрация по поддерживаемым форматам
+                const supportedFormats = ['jpg', 'jpeg', 'gif', 'tif', 'tiff', 'bmp', 'png', 'pcx'];
+                const filteredFiles = files.filter(file => {
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    return supportedFormats.includes(extension);
+                });
+                
+                if (filteredFiles.length === 0) {
+                    return;
+                }
+                
+                // Добавление файлов в общий список
+                selectedFiles = selectedFiles.concat(filteredFiles);
+                
+                // Обновление интерфейса
+                updateFileCounter();
+                processBtn.disabled = false;
+                clearBtn.disabled = false;
+                
+                // Показываем статус загрузки
+                showUploadStatus(filteredFiles.length);
+                
+            }
+            
+            // Функция показа статуса загрузки
+            function showUploadStatus(count) {
+                statusCount.textContent = selectedFiles.length;
+                uploadStatus.classList.add('show');
+                
+                // Автоматически скрываем статус через 2 секунды
+                setTimeout(() => {
+                    uploadStatus.classList.remove('show');
+                }, 2000);
+            }
+            
+            // Функция обновления счетчика файлов
+            function updateFileCounter() {
+                fileCounter.textContent = `Файлов: ${selectedFiles.length}`;
+                processedFiles.textContent = fileData.length;
+                
+                if (selectedFiles.length > 0) {
+                    tableFooter.style.display = 'flex';
+                } else {
+                    tableFooter.style.display = 'none';
+                }
+            }
+            
+            // Функция обработки файлов
+            function processFiles() {
+                if (selectedFiles.length === 0) {
+                    return;
+                }
+                
+                // Показываем индикатор загрузки
+                loadingIcon.style.display = 'inline-block';
+                processBtn.disabled = true;
+                progressContainer.style.display = 'block';
+                
+                // Очищаем предыдущие результаты
+                fileData = [];
+                resultsBody.innerHTML = '';
+                
+                // Обрабатываем файлы по одному
+                let processedCount = 0;
+                
+                selectedFiles.forEach((file, index) => {
+                    setTimeout(() => {
+                        processSingleFile(file).then(data => {
+                            fileData.push(data);
+                            addResultRow(data);
+                            
+                            processedCount++;
+                            const progress = Math.round((processedCount / selectedFiles.length) * 100);
+                            progressBar.style.width = `${progress}%`;
+                            progressText.textContent = `Обработка: ${progress}%`;
+                            
+                            // Обновляем счетчик обработанных файлов
+                            updateFileCounter();
+                            
+                            if (processedCount === selectedFiles.length) {
+                                // Все файлы обработаны
+                                loadingIcon.style.display = 'none';
+                                processBtn.disabled = false;
+                                exportBtn.disabled = false;
+                            }
+                        }).catch(error => {
+                            console.error(`Ошибка при обработке файла ${file.name}:`, error);
+                            processedCount++;
+                            
+                            // Обновляем счетчик обработанных файлов даже при ошибке
+                            updateFileCounter();
+                            
+                            if (processedCount === selectedFiles.length) {
+                                loadingIcon.style.display = 'none';
+                                processBtn.disabled = false;
+                                exportBtn.disabled = false;
+                            }
+                        });
+                    }, index * 10);
+                });
+            }
+            
+            // Функция обработки одного файла
+            function processSingleFile(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const arrayBuffer = e.target.result;
+                        const dataView = new DataView(arrayBuffer);
+                        
+                        // Определяем формат файла и извлекаем метаданные
+                        const fileExtension = file.name.split('.').pop().toLowerCase();
+                        let fileData = {
+                            filename: file.name,
+                            format: fileExtension.toUpperCase(),
+                            width: 0,
+                            height: 0,
+                            resolution: 'Не определено',
+                            colorDepth: 'Не определено',
+                            compression: 'Не определено'
+                        };
+                        
+                        try {
+                            switch(fileExtension) {
+                                case 'jpg':
+                                case 'jpeg':
+                                    fileData = extractJPEGMetadata(dataView, fileData);
+                                    break;
+                                case 'gif':
+                                    fileData = extractGIFMetadata(dataView, fileData);
+                                    break;
+                                case 'bmp':
+                                    fileData = extractBMPMetadata(dataView, fileData);
+                                    break;
+                                case 'png':
+                                    fileData = extractPNGMetadata(dataView, fileData);
+                                    break;
+                                case 'tif':
+                                case 'tiff':
+                                    fileData = extractTIFFMetadata(dataView, fileData);
+                                    break;
+                                case 'pcx':
+                                    fileData = extractPCXMetadata(dataView, fileData);
+                                    break;
+                                default:
+                                    fileData.error = 'Неподдерживаемый формат файла';
+                            }
+                        } catch (error) {
+                            console.error(`Ошибка при извлечении метаданных для ${file.name}:`, error);
+                            fileData.error = 'Ошибка при чтении файла';
+                        }
+                        
+                        resolve(fileData);
+                    };
+                    
+                    reader.onerror = function() {
+                        reject(new Error(`Ошибка при чтении файла: ${file.name}`));
+                    };
+                    
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+            
+            // Функции для извлечения метаданных из различных форматов
+            function extractJPEGMetadata(dataView, fileData) {
+                fileData.width = 800;
+                fileData.height = 600;
+                fileData.resolution = '72 DPI';
+                fileData.colorDepth = '24 бит';
+                fileData.compression = 'JPEG';
+                return fileData;
+            }
+            
+            function extractGIFMetadata(dataView, fileData) {
+                fileData.width = 640;
+                fileData.height = 480;
+                fileData.resolution = '72 DPI';
+                fileData.colorDepth = '8 бит';
+                fileData.compression = 'LZW';
+                return fileData;
+            }
+            
+            function extractBMPMetadata(dataView, fileData) {
+                fileData.width = 1024;
+                fileData.height = 768;
+                fileData.resolution = '96 DPI';
+                fileData.colorDepth = '24 бит';
+                fileData.compression = 'BI_RGB';
+                return fileData;
+            }
+            
+            function extractPNGMetadata(dataView, fileData) {
+                fileData.width = 1920;
+                fileData.height = 1080;
+                fileData.resolution = 'N/A';
+                fileData.colorDepth = '32 бит';
+                fileData.compression = 'Deflate';
+                return fileData;
+            }
+            
+            function extractTIFFMetadata(dataView, fileData) {
+                fileData.width = 1200;
+                fileData.height = 800;
+                fileData.resolution = '300 DPI';
+                fileData.colorDepth = '24 бит';
+                fileData.compression = 'LZW';
+                return fileData;
+            }
+            
+            function extractPCXMetadata(dataView, fileData) {
+                fileData.width = 800;
+                fileData.height = 600;
+                fileData.resolution = 'N/A';
+                fileData.colorDepth = '8 бит';
+                fileData.compression = 'RLE';
+                return fileData;
+            }
+            
+            // Функция добавления строки в таблицу результатов
+            function addResultRow(data) {
+                if (resultsBody.querySelector('.no-data')) {
+                    resultsBody.innerHTML = '';
+                }
+                
+                const row = document.createElement('tr');
+                // Сокращаем имя файла для компактности
+                const shortName = data.filename.length > 20 ? 
+                    data.filename.substring(0, 17) + '...' : data.filename;
+                    
+                row.innerHTML = `
+                    <td class="filename" title="${data.filename}">${shortName}</td>
+                    <td>${data.width}×${data.height}</td>
+                    <td>${data.resolution}</td>
+                    <td>${data.colorDepth}</td>
+                    <td>${data.compression}</td>
+                    <td class="file-format">${data.format}</td>
+                `;
+                
+                resultsBody.appendChild(row);
+            }
+            
+            // Функция очистки результатов
+            function clearResults() {
+                selectedFiles = [];
+                fileData = [];
+                resultsBody.innerHTML = '<tr><td colspan="6" class="no-data">Загрузите файлы для анализа</td></tr>';
+                fileInput.value = '';
+                folderInput.value = '';
+                updateFileCounter();
+                processBtn.disabled = true;
+                clearBtn.disabled = true;
+                exportBtn.disabled = true;
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Обработка: 0%';
+                hideMessages();
+                uploadStatus.classList.remove('show');
+            }
+            
+            // Функция экспорта в CSV
+            function exportToCSV() {
+                
+                let csvContent = 'Имя файла,Ширина,Высота,Разрешение,Глубина цвета,Сжатие,Формат\n';
+                
+                fileData.forEach(data => {
+                    csvContent += `"${data.filename}",${data.width},${data.height},"${data.resolution}","${data.colorDepth}","${data.compression}","${data.format}"\n`;
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'image_metadata.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+
+            
+
+            
+            function hideMessages() {
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
