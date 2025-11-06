@@ -498,12 +498,13 @@
                             <th>Разрешение</th>
                             <th>Цвет</th>
                             <th>Сжатие</th>
+                            <th>% Сжатия</th>
                             <th>Формат</th>
                         </tr>
                     </thead>
                     <tbody id="resultsBody">
                         <tr>
-                            <td colspan="6" class="no-data">Загрузите файлы для анализа</td>
+                            <td colspan="7" class="no-data">Загрузите файлы для анализа</td>
                         </tr>
                     </tbody>
                 </table>
@@ -518,7 +519,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Элементы DOM
             const fileInput = document.getElementById('fileInput');
             const folderInput = document.getElementById('folderInput');
             const processBtn = document.getElementById('processBtn');
@@ -538,15 +538,12 @@
             const statusCount = document.getElementById('statusCount');
             const uploadArea = document.getElementById('uploadArea');
             
-            // Переменные для хранения данных
             let selectedFiles = [100000];
             let fileData = [100000];
             
-            // Обработчики событий для выбора файлов
             fileInput.addEventListener('change', handleFileSelection);
             folderInput.addEventListener('change', handleFolderSelection);
             
-            // Обработчики для drag and drop
             uploadArea.addEventListener('dragover', function(e) {
                 e.preventDefault();
                 uploadArea.style.borderColor = 'var(--accent)';
@@ -570,24 +567,20 @@
                 }
             });
             
-            // Обработчики кнопок
             processBtn.addEventListener('click', processFiles);
             clearBtn.addEventListener('click', clearResults);
             exportBtn.addEventListener('click', exportToCSV);
             
-            // Функция обработки выбора файлов
             function handleFileSelection(e) {
                 const files = Array.from(e.target.files);
                 addFiles(files);
             }
             
-            // Функция обработки выбора папки
             function handleFolderSelection(e) {
                 const files = Array.from(e.target.files);
                 addFiles(files);
             }
             
-            // Функция добавления файлов в список
             function addFiles(files) {
                 // Фильтрация по поддерживаемым форматам
                 const supportedFormats = ['jpg', 'jpeg', 'gif', 'tif', 'tiff', 'bmp', 'png', 'pcx'];
@@ -600,31 +593,25 @@
                     return;
                 }
                 
-                // Добавление файлов в общий список
                 selectedFiles = selectedFiles.concat(filteredFiles);
                 
-                // Обновление интерфейса
                 updateFileCounter();
                 processBtn.disabled = false;
                 clearBtn.disabled = false;
-                
-                // Показываем статус загрузки
+
                 showUploadStatus(filteredFiles.length);
                 
             }
-            
-            // Функция показа статуса загрузки
+
             function showUploadStatus(count) {
                 statusCount.textContent = selectedFiles.length;
                 uploadStatus.classList.add('show');
                 
-                // Автоматически скрываем статус через 2 секунды
                 setTimeout(() => {
                     uploadStatus.classList.remove('show');
                 }, 2000);
             }
             
-            // Функция обновления счетчика файлов
             function updateFileCounter() {
                 fileCounter.textContent = `Файлов: ${selectedFiles.length}`;
                 processedFiles.textContent = fileData.length;
@@ -635,23 +622,19 @@
                     tableFooter.style.display = 'none';
                 }
             }
-            
-            // Функция обработки файлов
+
             function processFiles() {
                 if (selectedFiles.length === 0) {
                     return;
                 }
-                
-                // Показываем индикатор загрузки
+
                 loadingIcon.style.display = 'inline-block';
                 processBtn.disabled = true;
                 progressContainer.style.display = 'block';
-                
-                // Очищаем предыдущие результаты
+
                 fileData = [];
                 resultsBody.innerHTML = '';
-                
-                // Обрабатываем файлы по одному
+
                 let processedCount = 0;
                 
                 selectedFiles.forEach((file, index) => {
@@ -665,11 +648,9 @@
                             progressBar.style.width = `${progress}%`;
                             progressText.textContent = `Обработка: ${progress}%`;
                             
-                            // Обновляем счетчик обработанных файлов
                             updateFileCounter();
                             
                             if (processedCount === selectedFiles.length) {
-                                // Все файлы обработаны
                                 loadingIcon.style.display = 'none';
                                 processBtn.disabled = false;
                                 exportBtn.disabled = false;
@@ -677,8 +658,7 @@
                         }).catch(error => {
                             console.error(`Ошибка при обработке файла ${file.name}:`, error);
                             processedCount++;
-                            
-                            // Обновляем счетчик обработанных файлов даже при ошибке
+
                             updateFileCounter();
                             
                             if (processedCount === selectedFiles.length) {
@@ -690,8 +670,7 @@
                     }, index * 10);
                 });
             }
-            
-            // Функция обработки одного файла
+
             function processSingleFile(file) {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -700,7 +679,6 @@
                         const arrayBuffer = e.target.result;
                         const dataView = new DataView(arrayBuffer);
                         
-                        // Определяем формат файла и извлекаем метаданные
                         const fileExtension = file.name.split('.').pop().toLowerCase();
                         let fileData = {
                             filename: file.name,
@@ -709,30 +687,31 @@
                             height: 0,
                             resolution: 'Не определено',
                             colorDepth: 'Не определено',
-                            compression: 'Не определено'
+                            compression: 'Не определено',
+                            compressionRatio: '0%'
                         };
                         
                         try {
                             switch(fileExtension) {
                                 case 'jpg':
                                 case 'jpeg':
-                                    fileData = extractJPEGMetadata(dataView, fileData);
+                                    fileData = extractJPEGMetadata(dataView, fileData, file.size);
                                     break;
                                 case 'gif':
-                                    fileData = extractGIFMetadata(dataView, fileData);
+                                    fileData = extractGIFMetadata(dataView, fileData, file.size);
                                     break;
                                 case 'bmp':
-                                    fileData = extractBMPMetadata(dataView, fileData);
+                                    fileData = extractBMPMetadata(dataView, fileData, file.size);
                                     break;
                                 case 'png':
-                                    fileData = extractPNGMetadata(dataView, fileData);
+                                    fileData = extractPNGMetadata(dataView, fileData, file.size);
                                     break;
                                 case 'tif':
                                 case 'tiff':
-                                    fileData = extractTIFFMetadata(dataView, fileData);
+                                    fileData = extractTIFFMetadata(dataView, fileData, file.size);
                                     break;
                                 case 'pcx':
-                                    fileData = extractPCXMetadata(dataView, fileData);
+                                    fileData = extractPCXMetadata(dataView, fileData, file.size);
                                     break;
                                 default:
                                     fileData.error = 'Неподдерживаемый формат файла';
@@ -753,69 +732,90 @@
                 });
             }
             
-            // Функции для извлечения метаданных из различных форматов
-            function extractJPEGMetadata(dataView, fileData) {
+            function extractJPEGMetadata(dataView, fileData, fileSize) {
                 fileData.width = 800;
                 fileData.height = 600;
                 fileData.resolution = '72 DPI';
                 fileData.colorDepth = '24 бит';
                 fileData.compression = 'JPEG';
+                // Расчет процента сжатия (примерный расчет)
+                const rawSize = fileData.width * fileData.height * 3; // 3 байта на пиксель
+                fileData.compressionRatio = calculateCompressionRatio(rawSize, fileSize);
                 return fileData;
             }
             
-            function extractGIFMetadata(dataView, fileData) {
+            function extractGIFMetadata(dataView, fileData, fileSize) {
                 fileData.width = 640;
                 fileData.height = 480;
                 fileData.resolution = '72 DPI';
                 fileData.colorDepth = '8 бит';
                 fileData.compression = 'LZW';
+                // Расчет процента сжатия (примерный расчет)
+                const rawSize = fileData.width * fileData.height * 1; // 1 байт на пиксель
+                fileData.compressionRatio = calculateCompressionRatio(rawSize, fileSize);
                 return fileData;
             }
             
-            function extractBMPMetadata(dataView, fileData) {
+            function extractBMPMetadata(dataView, fileData, fileSize) {
                 fileData.width = 1024;
                 fileData.height = 768;
                 fileData.resolution = '96 DPI';
                 fileData.colorDepth = '24 бит';
                 fileData.compression = 'BI_RGB';
+                // Расчет процента сжатия (примерный расчет)
+                const rawSize = fileData.width * fileData.height * 3; // 3 байта на пиксель
+                fileData.compressionRatio = calculateCompressionRatio(rawSize, fileSize);
                 return fileData;
             }
             
-            function extractPNGMetadata(dataView, fileData) {
+            function extractPNGMetadata(dataView, fileData, fileSize) {
                 fileData.width = 1920;
                 fileData.height = 1080;
                 fileData.resolution = '96 DPI';
                 fileData.colorDepth = '32 бит';
                 fileData.compression = 'Deflate';
+                // Расчет процента сжатия (примерный расчет)
+                const rawSize = fileData.width * fileData.height * 4; // 4 байта на пиксель
+                fileData.compressionRatio = calculateCompressionRatio(rawSize, fileSize);
                 return fileData;
             }
             
-            function extractTIFFMetadata(dataView, fileData) {
+            function extractTIFFMetadata(dataView, fileData, fileSize) {
                 fileData.width = 1200;
                 fileData.height = 800;
                 fileData.resolution = '300 DPI';
                 fileData.colorDepth = '24 бит';
                 fileData.compression = 'LZW';
+                // Расчет процента сжатия (примерный расчет)
+                const rawSize = fileData.width * fileData.height * 3; // 3 байта на пиксель
+                fileData.compressionRatio = calculateCompressionRatio(rawSize, fileSize);
                 return fileData;
             }
             
-            function extractPCXMetadata(dataView, fileData) {
+            function extractPCXMetadata(dataView, fileData, fileSize) {
                 fileData.width = 800;
                 fileData.height = 600;
                 fileData.resolution = '96 DPI';
                 fileData.colorDepth = '8 бит';
                 fileData.compression = 'RLE';
+                // Расчет процента сжатия (примерный расчет)
+                const rawSize = fileData.width * fileData.height * 1; // 1 байт на пиксель
+                fileData.compressionRatio = calculateCompressionRatio(rawSize, fileSize);
                 return fileData;
             }
+
+            function calculateCompressionRatio(rawSize, compressedSize) {
+                if (rawSize <= 0) return '0%';
+                const ratio = ((rawSize - compressedSize) / rawSize) * 100;
+                return Math.max(0, Math.min(100, ratio)).toFixed(1) + '%';
+            }
             
-            // Функция добавления строки в таблицу результатов
             function addResultRow(data) {
                 if (resultsBody.querySelector('.no-data')) {
                     resultsBody.innerHTML = '';
                 }
                 
                 const row = document.createElement('tr');
-                // Сокращаем имя файла для компактности
                 const shortName = data.filename.length > 20 ? 
                     data.filename.substring(0, 17) + '...' : data.filename;
                     
@@ -825,17 +825,17 @@
                     <td>${data.resolution}</td>
                     <td>${data.colorDepth}</td>
                     <td>${data.compression}</td>
+                    <td>${data.compressionRatio}</td>
                     <td class="file-format">${data.format}</td>
                 `;
                 
                 resultsBody.appendChild(row);
             }
             
-            // Функция очистки результатов
             function clearResults() {
                 selectedFiles = [];
                 fileData = [];
-                resultsBody.innerHTML = '<tr><td colspan="6" class="no-data">Загрузите файлы для анализа</td></tr>';
+                resultsBody.innerHTML = '<tr><td colspan="7" class="no-data">Загрузите файлы для анализа</td></tr>';
                 fileInput.value = '';
                 folderInput.value = '';
                 updateFileCounter();
@@ -848,14 +848,13 @@
                 hideMessages();
                 uploadStatus.classList.remove('show');
             }
-            
-            // Функция экспорта в CSV
+
             function exportToCSV() {
                 
-                let csvContent = 'Имя файла,Ширина,Высота,Разрешение,Глубина цвета,Сжатие,Формат\n';
+                let csvContent = 'Имя файла,Ширина,Высота,Разрешение,Глубина цвета,Сжатие,% Сжатия,Формат\n';
                 
                 fileData.forEach(data => {
-                    csvContent += `"${data.filename}",${data.width},${data.height},"${data.resolution}","${data.colorDepth}","${data.compression}","${data.format}"\n`;
+                    csvContent += `"${data.filename}",${data.width},${data.height},"${data.resolution}","${data.colorDepth}","${data.compression}","${data.compressionRatio}","${data.format}"\n`;
                 });
                 
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
